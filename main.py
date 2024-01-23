@@ -1,9 +1,8 @@
 import os, sys
 
-def main():
+def main() -> None:
 
-    file_path = f"C:\\Users\\realr\\Desktop\\profiles.ini"
-    # file_path = f"{os.getenv('APPDATA')}\\Mozilla\\Firefox\\profiles.ini"
+    file_path = f"{os.getenv('APPDATA')}\\Mozilla\\Firefox\\profiles.ini"
 
     args = sys.argv
     if (len(args) != 2):
@@ -14,42 +13,51 @@ def main():
 
 
     with open(file_path, 'r') as f:
-        file_content = [
-            line.strip() 
-            for line 
-            in f.readlines()
-        ]
+        file_content = f.readlines()
+
 
     profile_mapping = get_profiles(file_content)
 
     desired_profile = args[1]
-
     if desired_profile not in profile_mapping:
         handle_error(f"""
             Given profile: {desired_profile}, is not among the
             available profiles.
         """)
 
+
     line_to_edit = profile_mapping['current-default']
 
-    print(file_content)
+    file_content[line_to_edit] = \
+        f'Default={profile_mapping[desired_profile]}\n'
 
-    file_content[line_to_edit] = f'Default={profile_mapping[desired_profile]}'
-
-    print(file_content)
 
     with open(file_path, 'w') as f:
-        f.writelines([line + '\n' for line in file_content])
+        f.writelines(file_content)
 
 
 
+"""
+Gets the profile paths for the available Firefox profiles,
+and the line number where the default profile is listed.
 
+Parameters
+----------
+file_content : list[str]
+    list of lines that the given file contains
+
+Returns
+-------
+dict[str, str | int]
+    mapping of profile name to profile path, or to line number for
+    where the default profile line is located
+"""
 def get_profiles(file_content: list[str]) -> dict[str, str | int]:
 
     profile_mapping = {}
 
     for line_num, line in enumerate(file_content):
-        if line == '':
+        if line == '\n':
             continue
 
         # get the current default profile line number
@@ -61,8 +69,8 @@ def get_profiles(file_content: list[str]) -> dict[str, str | int]:
         if not line.startswith('[Profile'):
             continue
 
-        profile_name = file_content[line_num+1].split('=')[1]
-        profile_path = file_content[line_num+3].split('=')[1]
+        profile_name = file_content[line_num+1].split('=')[1].strip()
+        profile_path = file_content[line_num+3].split('=')[1].strip()
 
         profile_mapping[profile_name] = profile_path
 
@@ -70,10 +78,18 @@ def get_profiles(file_content: list[str]) -> dict[str, str | int]:
 
 
         
+"""
+Handles errors in the running of the script, and then exits the script
 
+Parameters
+----------
+message : str
+    the error message to send before exiting the script
+"""
 def handle_error(message: str) -> None:
     print(message)
     exit(1)
+
 
 
 if __name__ == "__main__":
