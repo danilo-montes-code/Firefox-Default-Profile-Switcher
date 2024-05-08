@@ -20,6 +20,12 @@ def main() -> None:
 
     desired_profile = args[1]
     if desired_profile not in profile_mapping:
+        print("The given profiles are as follows:")
+        for key in profile_mapping:
+            if 'default' in key:
+                continue
+            print(f'> {key}')
+            
         handle_error(f"""
             Given profile: {desired_profile}, is not among the
             available profiles.
